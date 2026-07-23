@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace case_f360.Controllers;
+namespace TaskProcessor.Controllers;
 
 [ApiController]
 [Route("api/health")]
