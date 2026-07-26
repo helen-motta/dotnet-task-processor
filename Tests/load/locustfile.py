@@ -9,7 +9,7 @@ class TaskApiUser(HttpUser):
 
     @task
     def create_task(self):
-        task_type = random.choice([0, 1])
+        task_type = random.choice(["EnviarEmail", "GerarRelatorio"])
 
         payload = {
             "type": task_type,

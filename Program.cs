@@ -5,12 +5,25 @@ using TaskProcessor.Services;
 using TaskProcessor.Settings;
 using TaskProcessor.Messaging.Publishers;
 using TaskProcessor.Messaging.Consumers;
+using System.Text.Json.Serialization;
+using TaskProcessor.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
 Env.Load();
 
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter<TaskType>(
+                allowIntegerValues: false));
+
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter<TaskProcessor.Enums.TaskStatus>(
+                allowIntegerValues: false));
+    });
 
 // Configuração do Swagger
 builder.Services.AddEndpointsApiExplorer();
