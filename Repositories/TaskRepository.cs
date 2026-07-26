@@ -24,12 +24,19 @@ public class TaskRepository : ITaskRepository
         await _collection.UpdateOneAsync(filter, update, new UpdateOptions(), cancellationToken);
     }
 
-    public async Task<int?> IncrementRetryCountAsync(string taskId, CancellationToken cancellationToken = default)
+    public async Task<int?> TryPrepareTaskForRetryAsync(string taskId, int maxRetryCount, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TaskModel>.Filter.And(
-            Builders<TaskModel>.Filter.Eq(task => task.Id, taskId));
+            Builders<TaskModel>.Filter.Eq(
+            task => task.Id,
+            taskId),
+            Builders<TaskModel>.Filter.Lt(
+            task => task.RetryCount,
+            maxRetryCount));
 
-        var update = Builders<TaskModel>.Update.Inc(task => task.RetryCount, 1);
+        var update = Builders<TaskModel>.Update
+            .Inc(task => task.RetryCount, 1)
+            .Set(task => task.Status, Enums.TaskStatus.Pending);
 
         var updatedTask = await _collection.FindOneAndUpdateAsync(
             filter,

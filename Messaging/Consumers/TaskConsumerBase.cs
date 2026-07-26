@@ -58,6 +58,12 @@ public abstract class TaskConsumerBase : BackgroundService
             routingKey: RoutingKey,
             cancellationToken: cancellationToken);
 
+        await channel.BasicQosAsync(
+            prefetchSize: 0,
+            prefetchCount: 1,
+            global: false,
+            cancellationToken: cancellationToken);
+
         var consumer = new AsyncEventingBasicConsumer(channel);
 
         consumer.ReceivedAsync += async (_, eventArgs) =>

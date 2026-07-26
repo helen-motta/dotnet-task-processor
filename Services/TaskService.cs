@@ -102,14 +102,6 @@ public class TaskService : ITaskService
 
     public async Task<int?> TryPrepareTaskForRetryAsync(string taskId, CancellationToken cancellationToken = default)
     {
-        var task = await _repository.GetByIdAsync(taskId);
-
-        if (task is null || task.RetryCount >= MaxRetryCount)
-        {
-            return null;
-        }
-
-        await _repository.UpdateStatusAsync(taskId, Enums.TaskStatus.Pending, cancellationToken);
-        return await _repository.IncrementRetryCountAsync(taskId, cancellationToken);
+    return await _repository.TryPrepareTaskForRetryAsync(taskId, MaxRetryCount, cancellationToken);
     }
 }
