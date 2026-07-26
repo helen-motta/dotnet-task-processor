@@ -1,6 +1,6 @@
 import random
 from uuid import uuid4
-
+from locust.exception import StopUser
 from locust import HttpUser, between, task
 
 
@@ -29,3 +29,5 @@ class TaskApiUser(HttpUser):
                     f"Status inesperado: {response.status_code} - "
                     f"{response.text[:200]}"
                 )
+                
+        raise StopUser()
