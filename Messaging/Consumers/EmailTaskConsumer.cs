@@ -17,7 +17,7 @@ public sealed class EmailTaskConsumer : TaskConsumerBase
         Console.WriteLine($"[E-mail] Processando...");
         await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
         var sortedNumber = Random.Shared.Next(1, 11);
-        if (sortedNumber <= 10)
+        if (sortedNumber <= 1)
         {
             throw new Exception($"[E-mail] Ocorreu um erro ao processar a task {message.TaskId}.");
         }
