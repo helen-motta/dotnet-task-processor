@@ -24,7 +24,7 @@ public class TaskRepository : ITaskRepository
         await _collection.UpdateOneAsync(filter, update, new UpdateOptions(), cancellationToken);
     }
 
-    public async Task<int?> TryPrepareTaskForRetryAsync(string taskId, CancellationToken cancellationToken = default)
+    public async Task<int?> IncrementRetryCountAsync(string taskId, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TaskModel>.Filter.And(
             Builders<TaskModel>.Filter.Eq(task => task.Id, taskId));

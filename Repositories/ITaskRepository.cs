@@ -8,5 +8,5 @@ public interface ITaskRepository
     Task<List<TaskModel>> GetAllAsync();
     Task<TaskModel> GetByIdAsync(string id);
     Task UpdateStatusAsync(string taskId, Enums.TaskStatus status, CancellationToken cancellationToken = default);
-    Task<int?> TryPrepareTaskForRetryAsync(string taskId, CancellationToken cancellationToken = default);
+    Task<int?> IncrementRetryCountAsync(string taskId, CancellationToken cancellationToken = default);
 }
