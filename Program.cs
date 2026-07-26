@@ -53,8 +53,6 @@ var rabbitMqSettings = new RabbitMqSettings
 };
 
 builder.Services.AddSingleton(rabbitMqSettings);
-builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
-builder.Services.AddHostedService<ProcessTaskConsumer>();
 builder.Services.AddHostedService<EmailTaskConsumer>();
 builder.Services.AddHostedService<ReportTaskConsumer>();
 
