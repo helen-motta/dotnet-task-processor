@@ -4,14 +4,14 @@ namespace TaskProcessor.Dtos;
 
 public class CreateTaskRequest
 {
-    public string Type { get; set; } = string.Empty;
+    public TaskType? Type { get; set; } = null;
     public string Data { get; set; } = string.Empty;
 }
 
 public class TaskResponse
 {
     public string Id { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
+    public TaskType? Type { get; set; } = null;
     public string Data { get; set; } = string.Empty;
     public Enums.TaskStatus Status { get; set; } = Enums.TaskStatus.Pending;
     public int RetryCount { get; set; } = 0;

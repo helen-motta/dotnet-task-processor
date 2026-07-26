@@ -17,6 +17,13 @@ public class TaskRepository : ITaskRepository
         await _collection.InsertOneAsync(taskModel);
     }
 
+    public async Task UpdateStatusAsync(string taskId, Enums.TaskStatus status, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<TaskModel>.Filter.Eq(t => t.Id, taskId);
+        var update = Builders<TaskModel>.Update.Set(t => t.Status, status);
+        await _collection.UpdateOneAsync(filter, update, new UpdateOptions(), cancellationToken);
+    }
+
     public async Task<List<TaskModel>> GetAllAsync()
     {
         return await _collection.Find(_ => true).ToListAsync();

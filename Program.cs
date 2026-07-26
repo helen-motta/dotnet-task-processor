@@ -55,10 +55,12 @@ var rabbitMqSettings = new RabbitMqSettings
 builder.Services.AddSingleton(rabbitMqSettings);
 builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 builder.Services.AddHostedService<ProcessTaskConsumer>();
+builder.Services.AddHostedService<EmailTaskConsumer>();
 
 // Dependências de injeção para repositórios e serviços
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ITaskPublisher, TaskPublisher>();
 
 var app = builder.Build();
 app.MapControllers();

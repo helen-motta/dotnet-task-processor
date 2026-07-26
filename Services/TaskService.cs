@@ -1,5 +1,6 @@
 using TaskProcessor.Dtos;
-using TaskProcessor.Enums;
+using TaskProcessor.Messaging.Messages;
+using TaskProcessor.Messaging.Publishers;
 using TaskProcessor.Models;
 using TaskProcessor.Repositories;
 
@@ -8,14 +9,16 @@ namespace TaskProcessor.Services;
 public class TaskService : ITaskService
 {
     private readonly ITaskRepository _repository;
+    private readonly ITaskPublisher _publisher;
 
-    public TaskService(ITaskRepository repository)
+
+    public TaskService(ITaskRepository repository, ITaskPublisher publisher)
     {
         _repository = repository;
+        _publisher = publisher;
     }
 
-    public async Task<TaskResponse> CreateAsync(
-        CreateTaskRequest request)
+    public async Task<TaskResponse> CreateAsync(CreateTaskRequest request)
     {
         var taskModel = new TaskModel
         {
@@ -27,8 +30,22 @@ public class TaskService : ITaskService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _repository.CreateAsync(
-            taskModel);
+        await _repository.CreateAsync(taskModel);
+
+        var message = new ProcessTaskMessage(
+            TaskId: taskModel.Id,
+            Type: taskModel.Type,
+            Data: taskModel.Data);
+
+        try
+        {
+            await _publisher.PublishAsync(message);
+        }
+        catch
+        {
+            await _repository.UpdateStatusAsync(taskModel.Id, Enums.TaskStatus.Failed);
+            throw;
+        }
 
         return new TaskResponse
         {
@@ -76,5 +93,9 @@ public class TaskService : ITaskService
             RetryCount = taskModel.RetryCount,
             CreatedAt = taskModel.CreatedAt
         };
+    }
+    public async Task UpdateTaskStatusAsync(string taskId, Enums.TaskStatus status, CancellationToken cancellationToken = default)
+    {
+        await _repository.UpdateStatusAsync(taskId, status, cancellationToken);
     }
 }

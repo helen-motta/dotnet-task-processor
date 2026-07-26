@@ -8,4 +8,5 @@ public interface ITaskService
     Task<TaskResponse> CreateAsync(CreateTaskRequest request);
     Task<List<TaskResponse>> GetAllAsync();
     Task<TaskResponse?> GetByIdAsync(string id);
+    Task UpdateTaskStatusAsync(string taskId, Enums.TaskStatus status, CancellationToken cancellationToken = default);
 }
