@@ -24,6 +24,24 @@ public class TaskRepository : ITaskRepository
         await _collection.UpdateOneAsync(filter, update, new UpdateOptions(), cancellationToken);
     }
 
+    public async Task<int?> TryPrepareTaskForRetryAsync(string taskId, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<TaskModel>.Filter.And(
+            Builders<TaskModel>.Filter.Eq(task => task.Id, taskId));
+
+        var update = Builders<TaskModel>.Update.Inc(task => task.RetryCount, 1);
+
+        var updatedTask = await _collection.FindOneAndUpdateAsync(
+            filter,
+            update,
+            new FindOneAndUpdateOptions<TaskModel>
+            {
+                ReturnDocument = ReturnDocument.After
+            },
+            cancellationToken);
+
+        return updatedTask?.RetryCount;
+    }
     public async Task<List<TaskModel>> GetAllAsync()
     {
         return await _collection.Find(_ => true).ToListAsync();

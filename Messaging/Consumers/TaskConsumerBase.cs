@@ -64,8 +64,7 @@ public abstract class TaskConsumerBase : BackgroundService
         {
             var body = eventArgs.Body.ToArray();
 
-            var message =
-                JsonSerializer.Deserialize<ProcessTaskMessage>(body);
+            var message = JsonSerializer.Deserialize<ProcessTaskMessage>(body);
 
             if (message is null)
             {
@@ -82,17 +81,41 @@ public abstract class TaskConsumerBase : BackgroundService
                 await taskService.UpdateTaskStatusAsync(message.TaskId, Enums.TaskStatus.InProgress, cancellationToken);
                 await ProcessAsync(message, cancellationToken);
                 await taskService.UpdateTaskStatusAsync(message.TaskId, Enums.TaskStatus.Completed, cancellationToken);
+                
+                await channel.BasicAckAsync(
+                deliveryTag: eventArgs.DeliveryTag,
+                multiple: false,
+                cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[{ConsumerName}] Erro ao processar a task {message.TaskId}: {ex.Message}");
+
+                int? retryCount = await taskService.TryPrepareTaskForRetryAsync(message.TaskId, cancellationToken);
+
+                if (retryCount.HasValue)
+                {
+                    Console.WriteLine($"[{ConsumerName}] Retentativa {retryCount.Value}/3");
+
+                    await channel.BasicNackAsync(
+                        eventArgs.DeliveryTag,
+                        multiple: false,
+                        requeue: true,
+                        cancellationToken);
+
+                    return;
+                }
+
                 await taskService.UpdateTaskStatusAsync(message.TaskId, Enums.TaskStatus.Failed, cancellationToken);
+
+                await channel.BasicAckAsync(
+                eventArgs.DeliveryTag,
+                multiple: false,
+                cancellationToken);
+
+            return;
             }
 
-            await channel.BasicAckAsync(
-                deliveryTag: eventArgs.DeliveryTag,
-                multiple: false,
-                cancellationToken: cancellationToken);
         };
 
         await channel.BasicConsumeAsync(

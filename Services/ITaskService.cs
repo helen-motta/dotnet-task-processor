@@ -9,4 +9,5 @@ public interface ITaskService
     Task<List<TaskResponse>> GetAllAsync();
     Task<TaskResponse?> GetByIdAsync(string id);
     Task UpdateTaskStatusAsync(string taskId, Enums.TaskStatus status, CancellationToken cancellationToken = default);
+    Task<int?> TryPrepareTaskForRetryAsync(string taskId, CancellationToken cancellationToken = default);
 }

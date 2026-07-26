@@ -98,4 +98,17 @@ public class TaskService : ITaskService
     {
         await _repository.UpdateStatusAsync(taskId, status, cancellationToken);
     }
+
+    public async Task<int?> TryPrepareTaskForRetryAsync(string taskId, CancellationToken cancellationToken = default)
+    {
+        var task = await _repository.GetByIdAsync(taskId);
+
+        if (task is null || task.RetryCount >= 3)
+        {
+            return null;
+        }
+
+        await _repository.UpdateStatusAsync(taskId, Enums.TaskStatus.Pending, cancellationToken);
+        return await _repository.TryPrepareTaskForRetryAsync(taskId, cancellationToken);
+    }
 }
