@@ -49,9 +49,18 @@ public sealed class TaskPublisher : ITaskPublisher
 
         var body = JsonSerializer.SerializeToUtf8Bytes(message);
 
+        var properties = new BasicProperties
+        {
+            Persistent = true,
+            ContentType = "application/json",
+            ContentEncoding = "utf-8"
+        };
+
         await channel.BasicPublishAsync(
             exchange: RabbitMqSettings.Exchange,
             routingKey: routingKey,
+            mandatory: true,
+            basicProperties: properties,
             body: body,
             cancellationToken: cancellationToken);
 
