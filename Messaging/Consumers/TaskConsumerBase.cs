@@ -95,7 +95,7 @@ public abstract class TaskConsumerBase : BackgroundService
 
                 if (retryCount.HasValue)
                 {
-                    Console.WriteLine($"[{ConsumerName}] Retentativa {retryCount.Value}/3");
+                    Console.WriteLine($"[{ConsumerName}] Retentativa {retryCount.Value}");
 
                     await channel.BasicNackAsync(
                         eventArgs.DeliveryTag,

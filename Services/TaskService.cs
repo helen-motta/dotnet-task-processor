@@ -10,6 +10,7 @@ public class TaskService : ITaskService
 {
     private readonly ITaskRepository _repository;
     private readonly ITaskPublisher _publisher;
+    private const int MaxRetryCount = 3;
 
 
     public TaskService(ITaskRepository repository, ITaskPublisher publisher)
@@ -103,12 +104,12 @@ public class TaskService : ITaskService
     {
         var task = await _repository.GetByIdAsync(taskId);
 
-        if (task is null || task.RetryCount >= 3)
+        if (task is null || task.RetryCount >= MaxRetryCount)
         {
             return null;
         }
 
         await _repository.UpdateStatusAsync(taskId, Enums.TaskStatus.Pending, cancellationToken);
-        return await _repository.TryPrepareTaskForRetryAsync(taskId, cancellationToken);
+        return await _repository.IncrementRetryCountAsync(taskId, cancellationToken);
     }
 }
