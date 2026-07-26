@@ -1,114 +1,26 @@
-using System.Text;
-using System.Text.Json;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using TaskProcessor.Messaging.Messages;
-using TaskProcessor.Services;
 using TaskProcessor.Settings;
 
 namespace TaskProcessor.Messaging.Consumers;
 
-public sealed class EmailTaskConsumer : BackgroundService
+public sealed class EmailTaskConsumer : TaskConsumerBase
 {
-    private readonly RabbitMqSettings _settings;
-    private readonly IServiceScopeFactory _scopeFactory;
-
-    public EmailTaskConsumer(RabbitMqSettings settings, IServiceScopeFactory scopeFactory)
+    protected override string QueueName => RabbitMqSettings.EmailQueue;
+    protected override string RoutingKey => RabbitMqSettings.EmailRoutingKey;
+    protected override string ConsumerName => "E-mail";
+    public EmailTaskConsumer(RabbitMqSettings settings, IServiceScopeFactory scopeFactory) : base(settings, scopeFactory)
     {
-        _settings = settings;
-        _scopeFactory = scopeFactory;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ProcessAsync(ProcessTaskMessage message, CancellationToken cancellationToken)
     {
-        var factory = new ConnectionFactory
+        Console.WriteLine($"[E-mail] Processando...");
+        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+        var sortedNumber = Random.Shared.Next(1, 11);
+        if (sortedNumber <= 10)
         {
-            HostName = _settings.HostName,
-            Port = _settings.Port,
-            UserName = _settings.UserName,
-            Password = _settings.Password
-        };
-
-        await using var connection = await factory.CreateConnectionAsync(cancellationToken);
-        await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
-
-        await channel.ExchangeDeclareAsync(
-            exchange: RabbitMqSettings.Exchange,
-            type: ExchangeType.Direct,
-            durable: true,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
-
-        await channel.QueueDeclareAsync(
-            queue: RabbitMqSettings.EmailQueue,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null,
-            cancellationToken: cancellationToken);
-
-        await channel.QueueBindAsync(
-            queue: RabbitMqSettings.EmailQueue,
-            exchange: RabbitMqSettings.Exchange,
-            routingKey: RabbitMqSettings.EmailRoutingKey,
-            cancellationToken: cancellationToken);
-
-        var consumer = new AsyncEventingBasicConsumer(channel);
-
-        consumer.ReceivedAsync += async (_, eventArgs) =>
-        {
-            var body = eventArgs.Body.ToArray();
-            var json = Encoding.UTF8.GetString(body);
-
-            var message =
-                JsonSerializer.Deserialize<ProcessTaskMessage>(json)
-                ?? throw new InvalidOperationException(
-                    "Não foi possível interpretar a mensagem.");
-
-            using var scope = _scopeFactory.CreateScope();
-
-            var taskService = scope.ServiceProvider.GetRequiredService<ITaskService>();
-
-            try
-            {
-                await taskService.UpdateTaskStatusAsync(message.TaskId, Enums.TaskStatus.InProgress, cancellationToken);
-
-                Console.WriteLine($"Processando task de email {message.TaskId}...");
-
-                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-
-                await taskService.UpdateTaskStatusAsync(message.TaskId, Enums.TaskStatus.Completed, cancellationToken);
-
-                await channel.BasicAckAsync(
-                    deliveryTag: eventArgs.DeliveryTag,
-                    multiple: false,
-                    cancellationToken: CancellationToken.None);
-
-                Console.WriteLine($"Task de email {message.TaskId} concluída.");
-            }
-            catch (Exception exception)
-            {
-                await taskService.UpdateTaskStatusAsync(message.TaskId, Enums.TaskStatus.Failed, CancellationToken.None);
-
-                await channel.BasicNackAsync(
-                    deliveryTag: eventArgs.DeliveryTag,
-                    multiple: false,
-                    requeue: false,
-                    cancellationToken: CancellationToken.None);
-
-                Console.WriteLine($"Erro na task {message.TaskId}: {exception.Message}");
-            }
-        };
-
-        await channel.BasicConsumeAsync(
-            queue: RabbitMqSettings.EmailQueue,
-            autoAck: false,
-            consumer: consumer,
-            cancellationToken: cancellationToken);
-
-        Console.WriteLine(
-            $"Email consumer aguardando mensagens em {RabbitMqSettings.EmailQueue}...");
-        
-        await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            throw new Exception($"[E-mail] Ocorreu um erro ao processar a task {message.TaskId}.");
+        }
+        Console.WriteLine($"[E-mail] Task {message.TaskId} concluída.");
     }
 }
