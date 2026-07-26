@@ -56,6 +56,7 @@ builder.Services.AddSingleton(rabbitMqSettings);
 builder.Services.AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>();
 builder.Services.AddHostedService<ProcessTaskConsumer>();
 builder.Services.AddHostedService<EmailTaskConsumer>();
+builder.Services.AddHostedService<ReportTaskConsumer>();
 
 // Dependências de injeção para repositórios e serviços
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
