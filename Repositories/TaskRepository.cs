@@ -54,7 +54,7 @@ public class TaskRepository : ITaskRepository
         return await _collection.Find(_ => true).ToListAsync();
     }
 
-    public async Task<TaskModel> GetByIdAsync(string id)
+    public async Task<TaskModel?> GetByIdAsync(string id)
     {
         return await _collection.Find(task => task.Id == id).FirstOrDefaultAsync();
     }

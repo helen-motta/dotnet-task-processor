@@ -4,6 +4,7 @@ using TaskProcessor.Services;
 
 namespace TaskProcessor.Controllers;
 
+[ApiController]
 public class TaskProcessorController : ControllerBase
 {
     private readonly ITaskService _taskService;
