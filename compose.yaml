@@ -1,0 +1,89 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--eval",
+          "db.runCommand({ ping: 1 }).ok"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: taskprocessor
+      RABBITMQ_DEFAULT_PASS: taskprocessor
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+      MONGODB_URI: mongodb://mongodb:27017
+
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: taskprocessor
+      RABBITMQ_PASSWORD: taskprocessor
+      RABBITMQ_QUEUE: task_queue_test
+    ports:
+      - "5000:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  locust:
+    image: locustio/locust
+    profiles: ["load"]
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./Tests/load:/mnt/locust:ro
+    command:
+      - -f
+      - /mnt/locust/locustfile.py
+      - --host
+      - http://api:8080
+    depends_on:
+      - api
+
+  unit-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: unit-tests
+    profiles: ["test"]
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:
