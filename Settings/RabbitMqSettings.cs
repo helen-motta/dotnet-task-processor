@@ -2,11 +2,11 @@ namespace TaskProcessor.Settings;
 
 public sealed class RabbitMqSettings
 {
-    public string HostName { get; init; } = "localhost";
-    public int Port { get; init; } = 5672;
-    public string UserName { get; init; } = string.Empty;
-    public string Password { get; init; } = string.Empty;
-    public string QueueName { get; init; } = "task_queue_test";
+    public required string HostName { get; init; }
+    public required int Port { get; init; }
+    public required string UserName { get; init; }
+    public required string Password { get; init; }
+    public required string QueueName { get; init; }
     public const string Exchange = "tasks_exchange";
     public const string EmailQueue = "email_tasks_queue";
     public const string ReportQueue = "report_tasks_queue";
