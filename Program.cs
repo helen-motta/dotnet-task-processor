@@ -5,6 +5,7 @@ using TaskProcessor.Services;
 using TaskProcessor.Settings;
 using TaskProcessor.Messaging.Publishers;
 using TaskProcessor.Messaging.Consumers;
+using TaskProcessor.Messaging.Connections;
 using System.Text.Json.Serialization;
 using TaskProcessor.Enums;
 
@@ -66,6 +67,13 @@ var rabbitMqSettings = new RabbitMqSettings
 };
 
 builder.Services.AddSingleton(rabbitMqSettings);
+builder.Services.AddSingleton<RabbitMqConnectionProvider>();
+builder.Services.AddSingleton<IRabbitMqConnectionProvider>(
+    serviceProvider =>
+        serviceProvider.GetRequiredService<RabbitMqConnectionProvider>());
+builder.Services.AddHostedService(
+    serviceProvider =>
+        serviceProvider.GetRequiredService<RabbitMqConnectionProvider>());
 builder.Services.AddHostedService<EmailTaskConsumer>();
 builder.Services.AddHostedService<ReportTaskConsumer>();
 

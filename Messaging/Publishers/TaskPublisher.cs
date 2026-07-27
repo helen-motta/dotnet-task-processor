@@ -2,6 +2,7 @@ using System.Text;
 using RabbitMQ.Client;
 using TaskProcessor.Enums;
 using TaskProcessor.Settings;
+using TaskProcessor.Messaging.Connections;
 using TaskProcessor.Messaging.Messages;
 using System.Text.Json;
 
@@ -9,11 +10,11 @@ namespace TaskProcessor.Messaging.Publishers;
 
 public sealed class TaskPublisher : ITaskPublisher
 {
-    private readonly RabbitMqSettings _settings;
+    private readonly IRabbitMqConnectionProvider _connectionProvider;
 
-    public TaskPublisher(RabbitMqSettings settings)
+    public TaskPublisher(IRabbitMqConnectionProvider connectionProvider)
     {
-        _settings = settings;
+        _connectionProvider = connectionProvider;
     }
 
     public async Task PublishAsync(ProcessTaskMessage message, CancellationToken cancellationToken = default)
@@ -27,17 +28,8 @@ public sealed class TaskPublisher : ITaskPublisher
             _ => throw new ArgumentException("Tipo de tarefa inválido.")
         };
 
-        var factory = new ConnectionFactory
-        {
-            HostName = _settings.HostName,
-            Port = _settings.Port,
-            UserName = _settings.UserName,
-            Password = _settings.Password
-        };
-
-        using var connection = await factory.CreateConnectionAsync(cancellationToken);
-
-        using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+        var connection = await _connectionProvider.GetConnectionAsync(cancellationToken);
+        await using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
         await channel.ExchangeDeclareAsync(
             exchange: RabbitMqSettings.Exchange,
