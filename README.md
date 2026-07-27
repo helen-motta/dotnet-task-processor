@@ -1,6 +1,8 @@
 # Task Processor
 Serviço de processamento assíncrono de tarefas desenvolvido em C# com ASP.NET Core, MongoDB e RabbitMQ.
 
+Para conhecer detalhadamente a arquitetura, as implementações e as regras de negócio, consulte a [documentação técnica](./DOCUMENTACAO_TECNICA.md).
+
 ## Executando com Docker
 Na raiz do projeto, execute:
 
